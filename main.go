@@ -19,6 +19,7 @@ var (
 	sshUsernameFlag  = flag.String("username", "vagrant", "ssh username")
 	sshPasswordFlag  = flag.String("password", "", "ssh password")
 	sshPortFlag      = flag.Uint("port", 22, "ssh port")
+	sshServiceIDFlag = flag.String("service-id", "", "the destination hyper-v socket Service ID (GUID).\nwhen this is used, the -port parameter is ignored.")
 	commandStdinFlag = flag.String("stdin", "", "data to pass into the command stdin")
 	commandFlag      = flag.String("command", "ps -efww --forest", "command to execute")
 	version          = "0.0.0-dev"
@@ -76,10 +77,18 @@ func executeCommand(stdin string, command string) (int, string, error) {
 			log.Fatalf("Failed to parse VM ID: %v", err)
 		}
 	}
+	var serviceID guid.GUID
+	if *sshServiceIDFlag == "" {
+		serviceID = winio.VsockServiceID(uint32(*sshPortFlag))
+	} else {
+		serviceID, err = guid.FromString(*sshServiceIDFlag)
+		if err != nil {
+			log.Fatalf("Failed to parse service ID: %v", err)
+		}
 	}
 	addr := &winio.HvsockAddr{
 		VMID:      vmid,
-		ServiceID: winio.VsockServiceID(uint32(*sshPortFlag)),
+		ServiceID: serviceID,
 	}
 	conn, err := winio.Dial(context.Background(), addr)
 	if err != nil {

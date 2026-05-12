@@ -21,3 +21,16 @@ In a PowerShell session, execute:
     -vmid ((Get-VM vm1).ID) `
     -command 'ps -efww --forest'
 ```
+
+This can also be executed inside a Guest Hyper-V VM, to target a local service:
+
+```powershell
+# NB the available service-id GUIDs are listed in the Hyper-V Host registry key at:
+#       HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Virtualization\GuestCommunicationServices
+.\use-ssh-over-hyper-v-socket.exe `
+    -username vagrant `
+    -password vagrant `
+    -vmid localhost `
+    -service-id '0000138A-FACB-11E6-BD58-64006A7986D3' `
+    -command 'whoami.exe /all'
+```
