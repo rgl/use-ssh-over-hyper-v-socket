@@ -35,6 +35,12 @@ func main() {
 		return
 	}
 
+	if *vmidFlag == "" {
+		fmt.Fprintln(os.Stderr, "ERROR: You must set the -vmid parameter.")
+		flag.Usage()
+		os.Exit(1)
+	}
+
 	log.Printf("Executing the %s command...", *commandFlag)
 
 	exitCode, output, err := executeCommand(*commandStdinFlag, *commandFlag)
