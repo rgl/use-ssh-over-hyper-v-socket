@@ -15,7 +15,7 @@ import (
 
 var (
 	versionFlag      = flag.Bool("version", false, "show version")
-	vmidFlag         = flag.String("vmid", "", "hyper-v VM ID (GUID)")
+	vmidFlag         = flag.String("vmid", "", "hyper-v VM ID (GUID or localhost)")
 	sshUsernameFlag  = flag.String("username", "vagrant", "ssh username")
 	sshPasswordFlag  = flag.String("password", "", "ssh password")
 	sshPortFlag      = flag.Uint("port", 22, "ssh port")
@@ -66,9 +66,16 @@ func executeCommand(stdin string, command string) (int, string, error) {
 
 	log.Printf("Connecting to %s on port %d...", *vmidFlag, *sshPortFlag)
 
-	vmid, err := guid.FromString(*vmidFlag)
-	if err != nil {
-		log.Fatalf("Failed to parse VM ID: %v", err)
+	var err error
+	var vmid guid.GUID
+	if *vmidFlag == "localhost" {
+		vmid = winio.HvsockGUIDLoopback()
+	} else {
+		vmid, err = guid.FromString(*vmidFlag)
+		if err != nil {
+			log.Fatalf("Failed to parse VM ID: %v", err)
+		}
+	}
 	}
 	addr := &winio.HvsockAddr{
 		VMID:      vmid,
