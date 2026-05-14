@@ -21,10 +21,16 @@ jobs:
             "0.0.0-dev"
           }
           $revision = $env:GITHUB_SHA
+          Write-Output "Building for Windows..."
+          go build -ldflags="-s -w -X main.version=$version -X main.revision=$revision"
+          Write-Output "Building for Linux..."
+          $env:GOOS = 'linux'
+          $env:GOARCH = 'amd64'
           go build -ldflags="-s -w -X main.version=$version -X main.revision=$revision"
       - name: Create artifact
         shell: pwsh
         run: |
+          Write-Output "Creating Windows artifact..."
           &"C:\Program Files\7-Zip\7z.exe" `
             a `
             -r `
@@ -32,11 +38,17 @@ jobs:
             -mx=9 `
             use-ssh-over-hyper-v-socket.zip `
             use-ssh-over-hyper-v-socket.exe
+          Write-Output "Creating Linux artifact..."
+          tar czf `
+            use-ssh-over-hyper-v-socket.tgz `
+            use-ssh-over-hyper-v-socket
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
           name: use-ssh-over-hyper-v-socket
-          path: use-ssh-over-hyper-v-socket.zip
+          path: |
+            use-ssh-over-hyper-v-socket.zip
+            use-ssh-over-hyper-v-socket.tgz
   release:
     if: startsWith(github.ref, 'refs/tags/v')
     name: Release
@@ -52,5 +64,7 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           prerelease: ${{ contains(github.ref_name, '-') }}
-          artifacts: '*.zip'
+          artifacts: >-
+            use-ssh-over-hyper-v-socket.zip,
+            use-ssh-over-hyper-v-socket.tgz
           token: ${{ secrets.GITHUB_TOKEN }}

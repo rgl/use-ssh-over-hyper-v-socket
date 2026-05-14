@@ -22,7 +22,7 @@ In a PowerShell session, execute:
     -command 'ps -efww --forest'
 ```
 
-This can also be executed inside a Guest Hyper-V VM, to target a local service:
+This can also be executed inside a Windows Guest Hyper-V VM, to target a local service:
 
 ```powershell
 # NB the available service-id GUIDs are listed in the Hyper-V Host registry key at:
@@ -33,4 +33,15 @@ This can also be executed inside a Guest Hyper-V VM, to target a local service:
     -vmid localhost `
     -service-id '0000138A-FACB-11E6-BD58-64006A7986D3' `
     -command 'whoami.exe /all'
+```
+
+This can also be executed inside a Linux Guest Hyper-V VM, to target a local service:
+
+```bash
+./use-ssh-over-hyper-v-socket `
+    -username vagrant `
+    -password vagrant `
+    -vmid localhost `
+    -port 5002 `
+    -command 'id'
 ```

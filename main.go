@@ -2,20 +2,17 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 
-	"github.com/Microsoft/go-winio"
-	"github.com/Microsoft/go-winio/pkg/guid"
 	"golang.org/x/crypto/ssh"
 )
 
 var (
 	versionFlag      = flag.Bool("version", false, "show version")
-	vmidFlag         = flag.String("vmid", "", "hyper-v VM ID (GUID or localhost)")
+	vmidFlag         = flag.String("vmid", "", "hyper-v VM ID (GUID or localhost) or Context ID (UINT or one of local, hypervisor, host)")
 	sshUsernameFlag  = flag.String("username", "vagrant", "ssh username")
 	sshPasswordFlag  = flag.String("password", "", "ssh password")
 	sshPortFlag      = flag.Uint("port", 22, "ssh port")
@@ -65,36 +62,12 @@ func executeCommand(stdin string, command string) (int, string, error) {
 		config.Auth = append(config.Auth, ssh.Password(*sshPasswordFlag))
 	}
 
-	log.Printf("Connecting to %s on port %d...", *vmidFlag, *sshPortFlag)
-
-	var err error
-	var vmid guid.GUID
-	if *vmidFlag == "localhost" {
-		vmid = winio.HvsockGUIDLoopback()
-	} else {
-		vmid, err = guid.FromString(*vmidFlag)
-		if err != nil {
-			log.Fatalf("Failed to parse VM ID: %v", err)
-		}
-	}
-	var serviceID guid.GUID
-	if *sshServiceIDFlag == "" {
-		serviceID = winio.VsockServiceID(uint32(*sshPortFlag))
-	} else {
-		serviceID, err = guid.FromString(*sshServiceIDFlag)
-		if err != nil {
-			log.Fatalf("Failed to parse service ID: %v", err)
-		}
-	}
-	addr := &winio.HvsockAddr{
-		VMID:      vmid,
-		ServiceID: serviceID,
-	}
-	conn, err := winio.Dial(context.Background(), addr)
+	conn, addr, err := openConnection(*vmidFlag)
 	if err != nil {
-		log.Fatalf("Failed to dial: %v", err)
+		return -1, "", fmt.Errorf("failed to open ssh connection: %w", err)
 	}
-	c, chans, reqs, err := ssh.NewClientConn(conn, addr.String(), config)
+
+	c, chans, reqs, err := ssh.NewClientConn(conn, addr, config)
 	if err != nil {
 		log.Fatalf("Failed to create connection: %v", err)
 	}

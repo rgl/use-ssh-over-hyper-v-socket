@@ -7,4 +7,13 @@ require (
 	golang.org/x/crypto v0.51.0
 )
 
-require golang.org/x/sys v0.44.0 // indirect
+require (
+	github.com/mdlayher/vsock v1.2.1
+	golang.org/x/sys v0.44.0 // indirect
+)
+
+require (
+	github.com/mdlayher/socket v0.6.0 // indirect
+	golang.org/x/net v0.54.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
+)
